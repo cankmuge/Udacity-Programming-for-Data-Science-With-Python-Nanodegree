@@ -1,0 +1,233 @@
+import time
+import pandas as pd
+import numpy as np
+import json
+
+CITY_DATA = { 'chicago': 'chicago.csv',
+              'new york city': 'new_york_city.csv',
+              'washington': 'washington.csv' }
+
+def get_filters():
+    """
+    Asks user to specify a city, month, and day to analyze.
+
+    Returns:
+        (str) city - name of the city to analyze
+        (str) month - name of the month to filter by, or "all" to apply no month filter
+        (str) day - name of the day of week to filter by, or "all" to apply no day filter
+    """
+    print('Hello! Let\'s explore some US bikeshare data!')
+
+
+    validity = False 
+
+    # get user input for city (chicago, new york city, washington). HINT: Use a while loop to handle invalid inputs
+    while True: 
+        city = str(input("\n Choose a city (chicago, new york city, washington): ").strip().lower())
+
+        if city not in ("chicago", "new york city", "washington"):
+            print("\n Please input a valid response")
+        else:
+            print("\n Running the program for '{}' ".format(city.title()))
+            break
+
+    # get user input for month (all, january, february, ... , june)
+    while True:
+        month = str(input("\n Choose name of month to filter by: ").strip().lower())
+
+        if month not in ("january", "february", "march", "april", "may", "june", "all"):
+            print("\n Please input a valid response")
+        else:
+            print("\n Running the program for '{}' ".format(month.title()))
+            break
+
+            
+    # get user input for day of week (all, monday, tuesday, ... sunday)
+    while True:
+        day = str(input("\nChoose name of day to filter by: ").strip().lower())
+
+        if day not in ("monday", "tuesday", "wednesday", "thursday", "friday", "saturday" , "sunday", "all"):
+            print("\n Please input a valid response")
+        else:
+            print("\n Running the program for '{}' ".format(day.title()))
+            break
+    
+
+    print('-'*40)
+    return city, month, day
+
+
+
+def load_data(city, month, day):
+    """
+    Loads data for the specified city and filters by month and day if applicable.
+
+    Args:
+        (str) city - name of the city to analyze
+        (str) month - name of the month to filter by, or "all" to apply no month filter
+        (str) day - name of the day of week to filter by, or "all" to apply no day filter
+    Returns:
+        df - Pandas DataFrame containing city data filtered by month and day
+    """
+    print(" Filters: "
+          "[ {}, {}, {}] ".format(city, month, day).center(78, '*'))
+    
+    
+    df = pd.read_csv(CITY_DATA[city])
+   
+    
+    df['Start Time'] = pd.to_datetime(df['Start Time'])
+    df['month'] = df['Start Time'].dt.month
+    df['day_of_week'] = df['Start Time'].dt.day_name()
+    df['hour'] = df['Start Time'].dt.hour
+    
+    if month != 'all':
+        # use the index of the months list to get the corresponding int
+        months = ['january', 'february', 'march', 'april', 'may', 'june']
+        month = months.index(month) + 1
+        df = df[df['month'] == month]
+
+    if day != 'all':
+        df = df[df['day_of_week'] == day.title()]
+
+    return df
+
+
+
+def time_stats(df):
+    """Displays statistics on the most frequent times of travel."""
+    
+    print(' Calculating The Most Frequent Times of Travel '.center(78, '='))
+    start_time = time.time()
+    
+    # convert the Start Time column to datetime
+    df['Start Time'] = pd.to_datetime(df['Start Time'])
+    
+    # TO DO: display the most common month
+    df['month'] = df['Start Time'].dt.month
+    popular_month = df['month'].mode()[0]
+    print('Most common Month'.ljust(40, '.'), popular_month)
+    
+    # TO DO: display the most common day of week
+    df['day_of_week'] = df['Start Time'].dt.day_name()
+    popular_day = df['day_of_week'].mode()[0]
+    print('Most common day of the week'.ljust(40, '.'), popular_day)
+    
+    # TO DO: display the most common start hour
+    df['hour'] = df['Start Time'].dt.hour
+    popular_hour = df['hour'].mode()[0]
+    print('Most common Start Hour'.ljust(40, '.'), popular_hour)
+    
+
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*78, '\n')
+
+def station_stats(df):
+    """Displays statistics on the most popular stations and trip."""
+
+    print('\nCalculating The Most Popular Stations and Trip...\n')
+    start_time = time.time()
+
+    # TO DO: display most commonly used start station
+    start_station = df['Start Station'].mode()[0]
+    print("Most commonly used start station was: {}".format(start_station))
+
+    # TO DO: display most commonly used end station
+    end_station = df['End Station'].mode()[0]
+    print("Most commonly used end station was: {}".format(end_station))
+
+    # TO DO: display most frequent combination of start station and end station trip
+    
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
+
+
+def trip_duration_stats(df):
+    """Displays statistics on the total and average trip duration."""
+
+    print('\n Calculating Trip Duration...\n')
+    start_time = time.time()
+
+    # TO DO: display total travel time
+    total_time_of_travel = df['Trip Duration'].sum()
+
+    # TO DO: display mean travel time
+    mean_travel_time = df['Trip Duration'].mean()
+    print("Mean travel time is '{}' ".format(mean_travel_time))
+    
+    print("\n This took %s seconds." % (time.time() - start_time))
+    print('-'*40)
+
+
+def user_stats(df):
+    """Displays statistics on bikeshare users."""
+
+    print('\nCalculating User Stats...\n')
+    start_time = time.time()
+
+    # TO DO: Display counts of user types
+    user_type_count = df["User Type"].value_counts()
+    print(user_type_count)
+
+    # TO DO: Display counts of gender
+    if "Gender" in df.columns: 
+        gender_count = df["Gender"].value_counts()
+        nan_values = df["Gender"].isna().sum()
+        print("\n Counts by Gender: \n{}\n \n*Note: there were '{}' NaN values for gender column".format(gender_count,nan_values))
+    else:
+        print("No such column exists in this dataset")
+
+    # TO DO: Display earliest, most recent, and most common year of birth
+    if "Birth Year" in df.columns:
+
+        earliest_year = df['Birth Year'].min()
+        most_recent_year = df['Birth Year'].max()
+        most_common_year = df['Birth Year'].mode()[0]
+        print("\nEarliest birth year: '{}'. \nMost recent birth year: '{}'. \nMost common birth year: '{}'.".format(earliest_year, most_recent_year, most_common_year))
+    else:
+        print("\nNo column named 'Birth Year' exists in this dataset")
+
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
+
+
+def main():
+    while True:
+        city, month, day = get_filters()
+        df = load_data(city, month, day)
+
+        time_stats(df)
+        station_stats(df)
+        trip_duration_stats(df)
+        user_stats(df)
+
+        raw = str(input("\n Do you want to see raw data (y or n): ").strip().lower())
+        if raw not in ("y", "n"):
+            print("\n Please input a valid response")
+        elif raw == 'y':
+            x=4
+            print(df.iloc[:x])
+            raw = str(input("\n Do you want to see more raw data (y or n): ").strip().lower())
+            if raw == 'n':
+                restart = input('\n Would you like to restart? Enter y or n.\n')
+                if restart.lower() != 'y':
+                    break
+            while raw == 'y':
+                print(df.iloc[x+1:x+5])
+                x = x + 5
+                raw = str(input("\n Do you want to see more raw data (y or n): ").strip().lower())
+                if raw == 'n':
+                    restart = input('\n Would you like to restart? Enter y or n.\n')
+                    if restart.lower() != 'y':
+                        break
+        elif raw == 'n':
+            restart = input('\n Would you like to restart? Enter y or n.\n')
+            if restart.lower() != 'y':
+                break
+
+
+
+
+if __name__ == "__main__":
+    main()
+
